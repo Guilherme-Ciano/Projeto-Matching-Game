@@ -48,3 +48,38 @@ function removeMatchesInColumn(grid: number[][], col: number, startRow: number, 
 		grid[row][col] = 0;
 	}
 }
+
+function removeZerosFromArray(grid: number[][]): number[] {
+	const rows = grid.length;
+	const cols = grid[0].length;
+	const newArray: number[] = [];
+
+	for (let row = 0; row < rows; row++) {
+		for (let col = 0; col < cols; col++) {
+			if (grid[row][col] !== 0) {
+				newArray.push(grid[row][col]);
+			}
+		}
+	}
+
+	return newArray;
+}
+
+function hasThreeOrMoreDuplicates(list: number[]): boolean {
+	const frequencyMap: Map<number, number> = new Map();
+
+	for (let i = 0; i < list.length; i++) {
+		const num = list[i];
+		frequencyMap.set(num, (frequencyMap.get(num) || 0) + 1);
+		if (frequencyMap?.get(num) >= 3) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+export function noMoreRepeats(grid: number[][]): boolean {
+	const numbersInGame = removeZerosFromArray(grid);
+	return hasThreeOrMoreDuplicates(numbersInGame);
+}

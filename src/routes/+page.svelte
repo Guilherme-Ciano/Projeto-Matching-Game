@@ -2,46 +2,52 @@
 	import { onMount } from 'svelte';
 	import { handleDragStart, handleDragOver, handleDrop } from './dragDropRules';
 	import { generateGrid, observeMatrix, shuffleNumbers } from './matrizUtils';
-	import { checkAndRemoveMatches } from './rules';
+	import { checkAndRemoveMatches, noMoreRepeats } from './rules';
 
 	let grid: number[][] = [];
-	let userScore: number = 0;
-	let userMovements: number = 0;
+	let userScore = 0;
+	let userMovements = 0;
+	let isGameOver = false;
 
 	function onCellDrop(updatedGrid: number[][]) {
 		userMovements += 1;
 
-		const score = checkAndRemoveMatches(grid);
-		userScore = userScore + score;
+		const score = checkAndRemoveMatches(updatedGrid);
+		userScore += score;
 		grid = updatedGrid;
+
+		// Verifica se o jogo acabou
+		isGameOver = !noMoreRepeats(updatedGrid);
 	}
 
 	onMount(() => {
-		// Altere os valores aqui para o número desejado de linhas e colunas
-		let newGrid = generateGrid(8, 8);
+		const numRows = 8; // Número desejado de linhas
+		const numCols = 8; // Número desejado de colunas
 
-		while (!observeMatrix(newGrid)) {
-			newGrid = generateGrid(8, 8);
-		}
-
-		grid = newGrid;
+		// Gera um novo grid e verifica se é válido
+		do {
+			grid = generateGrid(numRows, numCols);
+		} while (!observeMatrix(grid));
 	});
 </script>
 
-<h1 style="font-weight: 700;">Reach at least 1500 before 15 moves to win!</h1>
+<h1 style="font-weight: 700;">Triplet Quest</h1>
 
 <div class="mainInfo">
 	<h3>Movements: {userMovements}</h3>
 	<h1>Score: {userScore}</h1>
 	<button
-		on:click={(_) => (grid = shuffleNumbers(grid))}
+		on:click={(_) => {
+			userMovements = userMovements + 1;
+			grid = shuffleNumbers(grid);
+		}}
 		disabled={userMovements === 15 && userScore < 1500}>Shuffle</button
 	>
 </div>
 
 <div
 	class="gameOver"
-	style={userMovements === 15 && userScore < 1500
+	style={userMovements === 10 && userScore < 800
 		? 'display: flex; z-index: 99;'
 		: 'display: none important; z-index: -10;'}
 >
@@ -54,6 +60,26 @@
 			userMovements = 0;
 			userScore = 0;
 			grid = generateGrid(8, 8);
+		}}
+	>
+		Try again
+	</button>
+</div>
+
+<div
+	class="gameOverWinning"
+	style={isGameOver ? 'display: flex; z-index: 99;' : 'display: none important; z-index: -10;'}
+>
+	<h1>You Win!</h1>
+	<h2>Total moves: {userMovements}</h2>
+	<h2>Final score: {userScore}</h2>
+
+	<button
+		on:click={(_) => {
+			userMovements = 0;
+			userScore = 0;
+			grid = generateGrid(8, 8);
+			isGameOver = false;
 		}}
 	>
 		Try again
@@ -87,7 +113,8 @@
 		display: none;
 	}
 
-	.gameOver {
+	.gameOver,
+	.gameOverWinning {
 		position: absolute;
 
 		flex-direction: column;
